@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { BrowserEngine, type TabInfo } from './browser-engine'
 import { inputToURL } from './url-utils'
+import { storage, type HistoryEntry, type Bookmark, type AppSettings } from './storage'
 
 /**
  * QuietBrowse — Main Process
@@ -143,11 +144,61 @@ function setupIPC(): void {
   ipcMain.on('tab:setBounds', (_event, bounds: { x: number; y: number; width: number; height: number }) => {
     engine?.setContentBounds(bounds)
   })
+
+  // ── History IPC ──────────────────────────────────
+  ipcMain.handle('history:getAll', (): HistoryEntry[] => {
+    return storage.getHistory()
+  })
+
+  ipcMain.handle('history:search', (_event, query: string): HistoryEntry[] => {
+    return storage.searchHistory(query)
+  })
+
+  ipcMain.on('history:delete', (_event, url: string) => {
+    storage.deleteHistoryEntry(url)
+  })
+
+  ipcMain.on('history:clear', () => {
+    storage.clearHistory()
+  })
+
+  // ── Bookmarks IPC ────────────────────────────────
+  ipcMain.handle('bookmarks:getAll', (_event, folder?: string): Bookmark[] => {
+    return storage.getBookmarks(folder)
+  })
+
+  ipcMain.on('bookmarks:add', (_event, url: string, title: string, favicon?: string) => {
+    storage.addBookmark(url, title, favicon)
+  })
+
+  ipcMain.on('bookmarks:remove', (_event, url: string) => {
+    storage.removeBookmark(url)
+  })
+
+  ipcMain.handle('bookmarks:isBookmarked', (_event, url: string): boolean => {
+    return storage.isBookmarked(url)
+  })
+
+  // ── Settings IPC ─────────────────────────────────
+  ipcMain.handle('settings:getAll', (): AppSettings => {
+    return storage.getAllSettings()
+  })
+
+  ipcMain.handle('settings:get', (_event, key: string): unknown => {
+    return storage.getSetting(key as keyof AppSettings)
+  })
+
+  ipcMain.on('settings:set', (_event, key: string, value: unknown) => {
+    storage.setSetting(key as keyof AppSettings, value as AppSettings[keyof AppSettings])
+  })
 }
 
 // ── App Lifecycle ────────────────────────────────
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.flame3301.quietbrowse')
+
+  // Initialize storage before anything else
+  storage.init()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

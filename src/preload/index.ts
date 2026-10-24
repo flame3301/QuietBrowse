@@ -39,6 +39,30 @@ const api = {
       ipcRenderer.send('tab:setBounds', bounds)
   },
 
+  // ── History ────────────────────────────────────
+  history: {
+    getAll: (): Promise<unknown[]> => ipcRenderer.invoke('history:getAll'),
+    search: (query: string): Promise<unknown[]> => ipcRenderer.invoke('history:search', query),
+    delete: (url: string): void => ipcRenderer.send('history:delete', url),
+    clear: (): void => ipcRenderer.send('history:clear')
+  },
+
+  // ── Bookmarks ──────────────────────────────────
+  bookmarks: {
+    getAll: (folder?: string): Promise<unknown[]> => ipcRenderer.invoke('bookmarks:getAll', folder),
+    add: (url: string, title: string, favicon?: string): void =>
+      ipcRenderer.send('bookmarks:add', url, title, favicon),
+    remove: (url: string): void => ipcRenderer.send('bookmarks:remove', url),
+    isBookmarked: (url: string): Promise<boolean> => ipcRenderer.invoke('bookmarks:isBookmarked', url)
+  },
+
+  // ── Settings ───────────────────────────────────
+  settings: {
+    getAll: (): Promise<unknown> => ipcRenderer.invoke('settings:getAll'),
+    get: (key: string): Promise<unknown> => ipcRenderer.invoke('settings:get', key),
+    set: (key: string, value: unknown): void => ipcRenderer.send('settings:set', key, value)
+  },
+
   // ── Event Listeners ────────────────────────────
   on: (channel: string, callback: (...args: unknown[]) => void): void => {
     const validChannels = [

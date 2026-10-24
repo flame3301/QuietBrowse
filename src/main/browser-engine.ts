@@ -1,4 +1,5 @@
 import { WebContentsView, type BrowserWindow } from 'electron'
+import { storage } from './storage'
 
 /**
  * BrowserEngine — manages WebContentsView instances (tabs)
@@ -129,6 +130,18 @@ export class BrowserEngine {
           })
         }
       } catch { /* window closing */ }
+    })
+
+    // Record history when a page finishes loading
+    wc.on('did-finish-load', () => {
+      try {
+        const url = wc.getURL()
+        const title = wc.getTitle()
+        // Skip internal pages and empty URLs
+        if (url && !url.startsWith('devtools://') && !url.startsWith('chrome://')) {
+          storage.addHistory(url, title)
+        }
+      } catch { /* ignore errors during shutdown */ }
     })
 
     // Handle new-window requests (open in same tab or new tab)
