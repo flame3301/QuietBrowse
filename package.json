@@ -1,0 +1,101 @@
+{
+  "name": "quietbrowse",
+  "version": "0.1.0",
+  "description": "A distraction-free, minimal web browser for Windows. Inspired by Search for macOS.",
+  "main": "src/main/index.js",
+  "author": "flame3301",
+  "license": "MIT",
+  "homepage": "https://github.com/flame3301/QuietBrowse",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flame3301/QuietBrowse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flame3301/QuietBrowse/issues"
+  },
+  "keywords": [
+    "browser",
+    "electron",
+    "minimal",
+    "privacy",
+    "ad-blocker",
+    "windows",
+    "distraction-free"
+  ],
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "lint": "echo \"No linter configured yet\""
+  },
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.1.0",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "^4.0.0",
+    "@xenodb/client": "^1.0.0",
+    "@xenodb/server": "^1.0.0",
+    "electron-updater": "^6.3.9"
+  },
+  "build": {
+    "appId": "com.flame3301.quietbrowse",
+    "productName": "QuietBrowse",
+    "copyright": "Copyright © 2026 flame3301",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
+      "signDlls": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "QuietBrowse"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "flame3301",
+      "repo": "QuietBrowse",
+      "releaseType": "release"
+    }
+  },
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "esbuild@0.25.12": true
+  }
+}
