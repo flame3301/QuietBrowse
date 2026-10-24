@@ -24,7 +24,7 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+    <div className="flex-1 flex items-start justify-center pt-[14vh] relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,var(--color-glow),transparent_70%)] animate-glow-pulse pointer-events-none" />
 
