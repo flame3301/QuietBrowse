@@ -24,9 +24,9 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
   }
 
   return (
-    <div className="flex-1 flex items-start justify-center pt-[14vh] relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,var(--color-glow),transparent_70%)] animate-glow-pulse pointer-events-none" />
+    <div className="flex-1 flex items-start justify-center pt-[14vh] relative">
+      {/* Background glow — centered behind the content, not clipped */}
+      <div className="absolute top-[10vh] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,var(--color-glow),transparent_70%)] animate-glow-pulse pointer-events-none" />
 
       {/* Content */}
       <div className="relative z-10 text-center flex flex-col items-center gap-5 animate-fade-in-up">
