@@ -82,21 +82,21 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
         )}
 
         {/* Keyboard hints */}
-        <div className="text-sm text-zinc-600 space-x-4">
+        <div className="text-sm text-zinc-700 space-x-4 opacity-50 hover:opacity-80 transition-opacity duration-500">
           <span>
-            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-500 bg-zinc-800 border border-zinc-700 rounded shadow-[inset_0_-1px_0_rgba(0,0,0,0.3)]">
+            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 bg-zinc-800/50 border border-zinc-700/40 rounded">
               Ctrl+T
             </kbd>{' '}
             New tab
           </span>
           <span>
-            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-500 bg-zinc-800 border border-zinc-700 rounded shadow-[inset_0_-1px_0_rgba(0,0,0,0.3)]">
+            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 bg-zinc-800/50 border border-zinc-700/40 rounded">
               Ctrl+L
             </kbd>{' '}
             Address bar
           </span>
           <span>
-            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-500 bg-zinc-800 border border-zinc-700 rounded shadow-[inset_0_-1px_0_rgba(0,0,0,0.3)]">
+            <kbd className="inline-block px-1.5 py-0.5 font-mono text-[11px] text-zinc-600 bg-zinc-800/50 border border-zinc-700/40 rounded">
               Ctrl+W
             </kbd>{' '}
             Close tab
