@@ -1,22 +1,25 @@
 import { useEffect, useRef, useCallback } from 'react'
 import TitleBar from './components/TitleBar'
 import NavigationBar from './components/NavigationBar'
+import TabBar from './components/TabBar'
 import Welcome from './components/Welcome'
 import { useTabs } from './hooks/useTabs'
 
 export default function App() {
   const {
+    tabs,
     activeTab,
     activeTabId,
     createTab,
     navigateActiveTab,
+    closeTab,
+    activateTab,
     hasActivePage
   } = useTabs()
 
   const contentRef = useRef<HTMLDivElement>(null)
 
   // Report the content area bounds to the main process
-  // so it knows where to position the WebContentsView
   const reportBounds = useCallback(() => {
     if (contentRef.current) {
       const rect = contentRef.current.getBoundingClientRect()
@@ -30,62 +33,75 @@ export default function App() {
     }
   }, [])
 
-  // Report bounds on mount and on resize
   useEffect(() => {
     reportBounds()
     window.addEventListener('resize', reportBounds)
     return () => window.removeEventListener('resize', reportBounds)
   }, [reportBounds])
 
-  // Also re-report when the tab bar visibility changes
+  // Re-report when tab state changes (tab bar visibility)
   useEffect(() => {
-    reportBounds()
-  }, [hasActivePage, reportBounds])
+    // Small delay to let the DOM update
+    const timer = setTimeout(reportBounds, 50)
+    return () => clearTimeout(timer)
+  }, [hasActivePage, tabs.length, reportBounds])
 
-  // Handle navigation from the omnibox
   const handleNavigate = useCallback(
     (input: string) => {
       if (activeTabId !== null) {
         navigateActiveTab(input)
       } else {
-        // No active tab, create one
         createTab(input)
       }
     },
     [activeTabId, navigateActiveTab, createTab]
   )
 
+  const handleNewTab = useCallback(() => {
+    createTab()
+  }, [createTab])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ctrl+T — new tab
       if (e.ctrlKey && e.key === 't') {
         e.preventDefault()
         createTab()
       }
-      // Ctrl+W — close active tab
       if (e.ctrlKey && e.key === 'w') {
         e.preventDefault()
-        if (activeTabId !== null) {
-          window.quietBrowse.tab.close(activeTabId)
-        }
+        if (activeTabId !== null) closeTab(activeTabId)
       }
-      // Ctrl+L or F6 — focus address bar
       if ((e.ctrlKey && e.key === 'l') || e.key === 'F6') {
         e.preventDefault()
-        const omnibox = document.querySelector<HTMLInputElement>('[aria-label="Address bar"]')
-        omnibox?.focus()
+        document.querySelector<HTMLInputElement>('[aria-label="Address bar"]')?.focus()
       }
-      // F5 — reload
       if (e.key === 'F5' && activeTabId !== null) {
         e.preventDefault()
         window.quietBrowse.tab.reload(activeTabId)
       }
+      // Ctrl+Tab — next tab
+      if (e.ctrlKey && e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault()
+        if (tabs.length > 1 && activeTabId !== null) {
+          const idx = tabs.findIndex((t) => t.id === activeTabId)
+          const nextIdx = (idx + 1) % tabs.length
+          activateTab(tabs[nextIdx].id)
+        }
+      }
+      // Ctrl+Shift+Tab — previous tab
+      if (e.ctrlKey && e.key === 'Tab' && e.shiftKey) {
+        e.preventDefault()
+        if (tabs.length > 1 && activeTabId !== null) {
+          const idx = tabs.findIndex((t) => t.id === activeTabId)
+          const prevIdx = (idx - 1 + tabs.length) % tabs.length
+          activateTab(tabs[prevIdx].id)
+        }
+      }
     }
-
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [activeTabId, createTab])
+  }, [activeTabId, tabs, createTab, closeTab, activateTab])
 
   return (
     <div className="flex flex-col h-screen">
@@ -99,16 +115,23 @@ export default function App() {
         onNavigate={handleNavigate}
       />
 
-      {/* Content area — WebContentsView is layered on top of this by the main process */}
-      <div ref={contentRef} className="flex-1 relative overflow-hidden">
-        {/* Welcome screen shows when no tabs are open */}
-        {!hasActivePage && <Welcome onNavigate={handleNavigate} />}
-
-        {/* When a tab is active, this div is overlaid by the WebContentsView.
-            It's transparent — the real page is rendered by Chromium above. */}
-        {hasActivePage && (
-          <div className="absolute inset-0 bg-white" />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Vertical tab bar — only show when tabs exist */}
+        {tabs.length > 0 && (
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onActivate={activateTab}
+            onClose={closeTab}
+            onNewTab={handleNewTab}
+          />
         )}
+
+        {/* Content area — WebContentsView overlays this */}
+        <div ref={contentRef} className="flex-1 relative overflow-hidden">
+          {!hasActivePage && <Welcome onNavigate={handleNavigate} />}
+          {hasActivePage && <div className="absolute inset-0 bg-white" />}
+        </div>
       </div>
     </div>
   )

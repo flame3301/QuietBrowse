@@ -1,4 +1,4 @@
-import { WebContentsView, type BrowserWindow, type WebContents } from 'electron'
+import { WebContentsView, type BrowserWindow } from 'electron'
 
 /**
  * BrowserEngine — manages WebContentsView instances (tabs)
@@ -108,7 +108,11 @@ export class BrowserEngine {
     const wc = tab.view.webContents
 
     const notify = (): void => {
-      this.window.webContents.send('tab:updated', this.getTabInfo(tab.id))
+      try {
+        if (!this.window.isDestroyed()) {
+          this.window.webContents.send('tab:updated', this.getTabInfo(tab.id))
+        }
+      } catch { /* window closing */ }
     }
 
     wc.on('did-start-loading', notify)
@@ -117,11 +121,14 @@ export class BrowserEngine {
     wc.on('did-navigate-in-page', notify)
     wc.on('page-title-updated', notify)
     wc.on('page-favicon-updated', (_event, favicons) => {
-      // Store first favicon
-      this.window.webContents.send('tab:updated', {
-        ...this.getTabInfo(tab.id),
-        favicon: favicons[0] || ''
-      })
+      try {
+        if (!this.window.isDestroyed()) {
+          this.window.webContents.send('tab:updated', {
+            ...this.getTabInfo(tab.id),
+            favicon: favicons[0] || ''
+          })
+        }
+      } catch { /* window closing */ }
     })
 
     // Handle new-window requests (open in same tab or new tab)
@@ -142,8 +149,8 @@ export class BrowserEngine {
       url: wc.getURL(),
       title: wc.getTitle() || 'New Tab',
       isLoading: wc.isLoading(),
-      canGoBack: wc.canGoBack(),
-      canGoForward: wc.canGoForward(),
+      canGoBack: wc.navigationHistory.canGoBack(),
+      canGoForward: wc.navigationHistory.canGoForward(),
       favicon: ''
     }
   }
@@ -188,12 +195,12 @@ export class BrowserEngine {
 
   /** Go back in a tab */
   goBack(tabId: number): void {
-    this.tabs.get(tabId)?.view.webContents.goBack()
+    this.tabs.get(tabId)?.view.webContents.navigationHistory.goBack()
   }
 
   /** Go forward in a tab */
   goForward(tabId: number): void {
-    this.tabs.get(tabId)?.view.webContents.goForward()
+    this.tabs.get(tabId)?.view.webContents.navigationHistory.goForward()
   }
 
   /** Reload a tab */
@@ -211,12 +218,23 @@ export class BrowserEngine {
     const tab = this.tabs.get(tabId)
     if (!tab) return
 
-    this.window.contentView.removeChildView(tab.view)
-
-    // Destroy the webcontents
-    ;(tab.view.webContents as WebContents & { destroy: () => void }).destroy?.()
-
+    // Remove from map first to prevent re-entry
     this.tabs.delete(tabId)
+
+    // Safely remove from window and destroy
+    try {
+      this.window.contentView.removeChildView(tab.view)
+    } catch {
+      // View may already be removed during window teardown
+    }
+
+    try {
+      if (!tab.view.webContents.isDestroyed()) {
+        tab.view.webContents.close()
+      }
+    } catch {
+      // WebContents may already be destroyed
+    }
 
     // If this was the active tab, activate another
     if (this.activeTabId === tabId) {
@@ -225,11 +243,19 @@ export class BrowserEngine {
       if (remaining.length > 0) {
         this.activateTab(remaining[remaining.length - 1])
       } else {
-        this.window.webContents.send('tab:all-closed')
+        try {
+          if (!this.window.isDestroyed()) {
+            this.window.webContents.send('tab:all-closed')
+          }
+        } catch { /* window closing */ }
       }
     }
 
-    this.window.webContents.send('tab:closed', tabId)
+    try {
+      if (!this.window.isDestroyed()) {
+        this.window.webContents.send('tab:closed', tabId)
+      }
+    } catch { /* window closing */ }
   }
 
   /** Get the active tab ID */
@@ -242,10 +268,13 @@ export class BrowserEngine {
     return this.tabs.size
   }
 
-  /** Destroy all tabs */
+  /** Destroy all tabs — called during app shutdown */
   destroy(): void {
-    for (const [id] of this.tabs) {
+    // Collect IDs first to avoid mutating map during iteration
+    const ids = Array.from(this.tabs.keys())
+    for (const id of ids) {
       this.closeTab(id)
     }
   }
 }
+
