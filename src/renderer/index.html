@@ -9,64 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./index.css">
 </head>
-<body>
-  <!-- Title bar (frameless window controls) -->
-  <header id="titlebar">
-    <div id="titlebar-drag">
-      <span id="app-title">QuietBrowse</span>
-    </div>
-    <div id="window-controls">
-      <button id="btn-minimize" class="window-btn" aria-label="Minimize">
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <rect x="1" y="5.5" width="10" height="1" fill="currentColor"/>
-        </svg>
-      </button>
-      <button id="btn-maximize" class="window-btn" aria-label="Maximize">
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/>
-        </svg>
-      </button>
-      <button id="btn-close" class="window-btn window-btn-close" aria-label="Close">
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.2"/>
-          <line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.2"/>
-        </svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- Main layout -->
-  <main id="app">
-    <!-- Splash / Welcome screen (shown until browser is built in Stage 2) -->
-    <div id="welcome">
-      <div id="welcome-glow"></div>
-      <div id="welcome-content">
-        <div id="welcome-icon">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="28" cy="28" r="20" stroke="url(#grad)" stroke-width="3" fill="none"/>
-            <line x1="42" y1="42" x2="58" y2="58" stroke="url(#grad)" stroke-width="3" stroke-linecap="round"/>
-            <defs>
-              <linearGradient id="grad" x1="0" y1="0" x2="64" y2="64">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="100%" stop-color="#a855f7"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <h1 id="welcome-title">QuietBrowse</h1>
-        <p id="welcome-subtitle">A browser with nothing in the way.</p>
-        <div id="welcome-version"></div>
-        <div id="welcome-keys">
-          <kbd>Ctrl+T</kbd> New tab &nbsp;&nbsp;
-          <kbd>Ctrl+L</kbd> Address bar &nbsp;&nbsp;
-          <kbd>Ctrl+W</kbd> Close tab
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script type="module" src="./index.js"></script>
+<body class="bg-zinc-950 text-zinc-100 font-sans antialiased select-none overflow-hidden h-screen">
+  <div id="root"></div>
+  <script type="module" src="./src/main.tsx"></script>
 </body>
 </html>

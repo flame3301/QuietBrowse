@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ── Custom Theme ─────────────────────────────────
+   Tailwind v4 CSS-first configuration.
+   Extends the default theme with QuietBrowse tokens.
+   ───────────────────────────────────────────────── */
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'SF Mono', ui-monospace, monospace;
+
+  /* Accent colors */
+  --color-accent-500: #6366f1;
+  --color-accent-400: #818cf8;
+  --color-accent-600: #4f46e5;
+
+  /* Glow */
+  --color-glow: rgba(99, 102, 241, 0.15);
+  --color-glow-strong: rgba(99, 102, 241, 0.3);
+
+  /* Layout */
+  --spacing-titlebar: 38px;
+  --spacing-tabbar: 240px;
+}
+
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme(--color-zinc-700);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme(--color-zinc-500);
+}
+
+/* ── Animations ───────────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 600ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}

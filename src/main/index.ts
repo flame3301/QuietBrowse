@@ -5,11 +5,11 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 /**
  * QuietBrowse — Main Process
  *
- * This is the entry point for the Electron main process.
- * It creates the browser window and manages the app lifecycle.
+ * Entry point for the Electron main process.
+ * Creates the browser window and manages the app lifecycle.
  */
 
-function createWindow() {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -18,7 +18,7 @@ function createWindow() {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#09090b',
     icon: join(__dirname, '../../build/icon.ico'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -29,7 +29,6 @@ function createWindow() {
     }
   })
 
-  // Show window when ready to prevent visual flash
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -59,8 +58,7 @@ function createWindow() {
 }
 
 // ── IPC Handlers ─────────────────────────────────
-function setupIPC() {
-  // Window controls
+function setupIPC(): void {
   ipcMain.on('window:minimize', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize()
   })
@@ -80,18 +78,15 @@ function setupIPC() {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
   })
 
-  // App info
   ipcMain.handle('app:getVersion', () => {
     return app.getVersion()
   })
 }
 
-// App lifecycle
+// ── App Lifecycle ────────────────────────────────
 app.whenReady().then(() => {
-  // Set app user model id for Windows notifications and taskbar
   electronApp.setAppUserModelId('com.flame3301.quietbrowse')
 
-  // Dev-mode: open DevTools with F12, ignore Ctrl+R in production
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
@@ -106,7 +101,6 @@ app.whenReady().then(() => {
   })
 })
 
-// Quit when all windows are closed (Windows behavior)
 app.on('window-all-closed', () => {
   app.quit()
 })

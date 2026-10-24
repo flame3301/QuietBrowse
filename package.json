@@ -2,7 +2,7 @@
   "name": "quietbrowse",
   "version": "0.1.0",
   "description": "A distraction-free, minimal web browser for Windows. Inspired by Search for macOS.",
-  "main": "src/main/index.js",
+  "main": "out/main/index.js",
   "author": "flame3301",
   "license": "MIT",
   "homepage": "https://github.com/flame3301/QuietBrowse",
@@ -32,16 +32,23 @@
     "lint": "echo \"No linter configured yet\""
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "electron": "^33.3.1",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.1.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
     "vite": "^6.3.5"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
     "@xenodb/client": "^1.0.0",
     "@xenodb/server": "^1.0.0",
-    "electron-updater": "^6.3.9"
+    "electron-updater": "^6.3.9",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "build": {
     "appId": "com.flame3301.quietbrowse",
@@ -95,7 +102,7 @@
     }
   },
   "allowScripts": {
-    "electron@33.4.11": true,
-    "esbuild@0.25.12": true
+    "esbuild@0.25.12": true,
+    "electron@33.3.1": true
   }
 }
