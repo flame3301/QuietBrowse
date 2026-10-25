@@ -31,7 +31,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   useEffect(() => {
     if (isOpen) {
-      window.quietBrowse.settings.getAll().then((s) => setSettings(s as AppSettings))
+      window.quietBrowse.settings.getAll().then((s: unknown) => setSettings(s as AppSettings))
     }
   }, [isOpen])
 
