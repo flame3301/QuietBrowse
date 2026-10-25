@@ -7,6 +7,7 @@ interface NavigationBarProps {
   canGoBack: boolean
   canGoForward: boolean
   onNavigate: (input: string) => void
+  onOpenSettings: () => void
 }
 
 export default function NavigationBar({
@@ -15,7 +16,8 @@ export default function NavigationBar({
   isLoading,
   canGoBack,
   canGoForward,
-  onNavigate
+  onNavigate,
+  onOpenSettings
 }: NavigationBarProps) {
   const handleBack = () => {
     if (activeTabId !== null) window.quietBrowse.tab.back(activeTabId)
@@ -88,6 +90,17 @@ export default function NavigationBar({
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           <line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </NavButton>
+
+      {/* Settings button */}
+      <NavButton
+        onClick={onOpenSettings}
+        label="Settings"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
       </NavButton>
     </div>

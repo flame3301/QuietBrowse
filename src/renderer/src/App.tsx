@@ -1,8 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import TitleBar from './components/TitleBar'
 import NavigationBar from './components/NavigationBar'
 import TabBar from './components/TabBar'
 import Welcome from './components/Welcome'
+import SettingsPanel from './components/SettingsPanel'
 import { useTabs } from './hooks/useTabs'
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
   } = useTabs()
 
   const contentRef = useRef<HTMLDivElement>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Report the content area bounds to the main process
   const reportBounds = useCallback(() => {
@@ -98,6 +100,11 @@ export default function App() {
           activateTab(tabs[prevIdx].id)
         }
       }
+      // Ctrl+, — settings
+      if (e.ctrlKey && e.key === ',') {
+        e.preventDefault()
+        setSettingsOpen((prev) => !prev)
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -113,6 +120,7 @@ export default function App() {
         canGoBack={activeTab?.canGoBack ?? false}
         canGoForward={activeTab?.canGoForward ?? false}
         onNavigate={handleNavigate}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -133,6 +141,9 @@ export default function App() {
           {hasActivePage && <div className="absolute inset-0 bg-white" />}
         </div>
       </div>
+
+      {/* Settings panel overlay */}
+      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

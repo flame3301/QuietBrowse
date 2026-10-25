@@ -5,7 +5,21 @@
  * and normalises URLs for navigation.
  */
 
-const SEARCH_ENGINE = 'https://www.google.com/search?q='
+const SEARCH_ENGINES: Record<string, string> = {
+  google: 'https://www.google.com/search?q=',
+  duckduckgo: 'https://duckduckgo.com/?q=',
+  bing: 'https://www.bing.com/search?q=',
+  brave: 'https://search.brave.com/search?q='
+}
+
+let currentEngine = 'google'
+
+/** Set the active search engine */
+export function setSearchEngine(engine: string): void {
+  if (engine in SEARCH_ENGINES) {
+    currentEngine = engine
+  }
+}
 
 /** Characters that suggest the input is a URL rather than a search */
 const URL_PATTERNS = [
@@ -40,6 +54,7 @@ export function inputToURL(input: string): string {
     return trimmed
   }
 
-  // It's a search query
-  return `${SEARCH_ENGINE}${encodeURIComponent(trimmed)}`
+  // It's a search query — use the configured engine
+  const base = SEARCH_ENGINES[currentEngine] || SEARCH_ENGINES.google
+  return `${base}${encodeURIComponent(trimmed)}`
 }

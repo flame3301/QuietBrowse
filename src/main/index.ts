@@ -2,7 +2,7 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { BrowserEngine, type TabInfo } from './browser-engine'
-import { inputToURL } from './url-utils'
+import { inputToURL, setSearchEngine } from './url-utils'
 import { storage, type HistoryEntry, type Bookmark, type AppSettings } from './storage'
 
 /**
@@ -190,6 +190,10 @@ function setupIPC(): void {
 
   ipcMain.on('settings:set', (_event, key: string, value: unknown) => {
     storage.setSetting(key as keyof AppSettings, value as AppSettings[keyof AppSettings])
+    // Apply search engine change immediately
+    if (key === 'searchEngine') {
+      setSearchEngine(value as string)
+    }
   })
 }
 
@@ -199,6 +203,9 @@ app.whenReady().then(() => {
 
   // Initialize storage before anything else
   storage.init()
+
+  // Apply saved search engine preference
+  setSearchEngine(storage.getSetting('searchEngine'))
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
