@@ -12,6 +12,7 @@ dist/
 dist-electron/
 
 # Editor directories
+.vscode/
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
