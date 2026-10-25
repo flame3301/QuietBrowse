@@ -39,6 +39,7 @@ export interface AppSettings {
   sidebarCollapsed: boolean
   clearOnExit: boolean
   adBlockEnabled: boolean
+  adBlockDisabledSites: string[]
   doNotTrack: boolean
   defaultZoom: number     // 1.0 = 100%
 }
@@ -51,7 +52,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   sidebarCollapsed: false,
   clearOnExit: false,
-  adBlockEnabled: false,
+  adBlockEnabled: true,
+  adBlockDisabledSites: [],
   doNotTrack: true,
   defaultZoom: 1.0
 }
@@ -176,6 +178,16 @@ class Storage {
 
   setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
     this.settingsDb.set(key, value)
+  }
+
+  setAdBlockSiteEnabled(site: string, enabled: boolean): void {
+    const sites = new Set(this.getSetting('adBlockDisabledSites'))
+    if (enabled) {
+      sites.delete(site)
+    } else {
+      sites.add(site)
+    }
+    this.setSetting('adBlockDisabledSites', [...sites])
   }
 
   getAllSettings(): AppSettings {

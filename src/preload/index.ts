@@ -24,7 +24,7 @@ const api = {
 
   // ── Tab Management ─────────────────────────────
   tab: {
-    create: (url?: string): Promise<number> => ipcRenderer.invoke('tab:create', url),
+    create: (url?: string, isPrivate = false): Promise<number> => ipcRenderer.invoke('tab:create', url, isPrivate),
     activate: (tabId: number): void => ipcRenderer.send('tab:activate', tabId),
     close: (tabId: number): void => ipcRenderer.send('tab:close', tabId),
     navigate: (tabId: number, input: string): void => ipcRenderer.send('tab:navigate', tabId, input),
@@ -76,6 +76,16 @@ const api = {
     set: (key: string, value: unknown): void => ipcRenderer.send('settings:set', key, value)
   },
 
+  privacy: {
+    isEnabledForSite: (url: string): Promise<boolean> => ipcRenderer.invoke('privacy:isEnabledForSite', url),
+    toggleSite: (url: string): void => ipcRenderer.send('privacy:toggleSite', url)
+  },
+
+  downloads: {
+    getAll: (): Promise<unknown[]> => ipcRenderer.invoke('downloads:getAll'),
+    open: (path: string): Promise<string> => ipcRenderer.invoke('downloads:open', path)
+  },
+
   // ── Event Listeners ────────────────────────────
   on: (channel: string, callback: (...args: unknown[]) => void): void => {
     const validChannels = [
@@ -84,7 +94,8 @@ const api = {
       'tab:updated',
       'tab:activated',
       'tab:closed',
-      'tab:all-closed'
+      'tab:all-closed',
+      'download:updated'
     ]
     if (validChannels.includes(channel)) {
       ipcRenderer.on(channel, (_event, ...args) => callback(...args))

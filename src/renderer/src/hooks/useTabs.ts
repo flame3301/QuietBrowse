@@ -8,6 +8,7 @@ export interface TabInfo {
   canGoBack: boolean
   canGoForward: boolean
   favicon: string
+  isPrivate: boolean
 }
 
 export function useTabs() {
@@ -57,8 +58,8 @@ export function useTabs() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null
 
-  const createTab = useCallback(async (url?: string) => {
-    const id = await window.quietBrowse.tab.create(url)
+  const createTab = useCallback(async (url?: string, isPrivate = false) => {
+    const id = await window.quietBrowse.tab.create(url, isPrivate)
     return id
   }, [])
 

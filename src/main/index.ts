@@ -1,7 +1,7 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { BrowserEngine, type TabInfo } from './browser-engine'
+import { BrowserEngine, type DownloadInfo, type TabInfo } from './browser-engine'
 import { inputToURL, setSearchEngine } from './url-utils'
 import { storage, type HistoryEntry, type Bookmark, type AppSettings } from './storage'
 
@@ -91,10 +91,10 @@ function setupIPC(): void {
   })
 
   // ── Tab / Navigation IPC ─────────────────────────
-  ipcMain.handle('tab:create', (_event, url?: string): number => {
+  ipcMain.handle('tab:create', (_event, url?: string, isPrivate = false): number => {
     if (!engine) return -1
     const resolvedUrl = url ? inputToURL(url) : undefined
-    const id = engine.createTab(resolvedUrl)
+    const id = engine.createTab(resolvedUrl, isPrivate)
     engine.activateTab(id)
     return id
   })
@@ -180,6 +180,14 @@ function setupIPC(): void {
     storage.clearHistory()
   })
 
+  ipcMain.handle('downloads:getAll', (): DownloadInfo[] => {
+    return engine?.getDownloads() ?? []
+  })
+
+  ipcMain.handle('downloads:open', async (_event, path: string): Promise<string> => {
+    return shell.openPath(path)
+  })
+
   // ── Bookmarks IPC ────────────────────────────────
   ipcMain.handle('bookmarks:getAll', (_event, folder?: string): Bookmark[] => {
     return storage.getBookmarks(folder)
@@ -212,6 +220,17 @@ function setupIPC(): void {
     if (key === 'searchEngine') {
       setSearchEngine(value as string)
     }
+    if (key === 'adBlockEnabled') {
+      engine?.setAdBlockEnabled(value as boolean)
+    }
+  })
+
+  ipcMain.handle('privacy:isEnabledForSite', (_event, url: string): boolean => {
+    return engine?.isAdBlockEnabledForSite(url) ?? false
+  })
+
+  ipcMain.on('privacy:toggleSite', (_event, url: string) => {
+    engine?.toggleAdBlockForSite(url)
   })
 }
 

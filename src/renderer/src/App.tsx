@@ -5,6 +5,7 @@ import TabBar from './components/TabBar'
 import FindBar from './components/FindBar'
 import Welcome from './components/Welcome'
 import SettingsPanel from './components/SettingsPanel'
+import LibraryPanel from './components/LibraryPanel'
 import { useTabs } from './hooks/useTabs'
 
 export default function App() {
@@ -22,17 +23,18 @@ export default function App() {
   const contentRef = useRef<HTMLDivElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [findOpen, setFindOpen] = useState(false)
+  const [libraryKind, setLibraryKind] = useState<'bookmarks' | 'history' | 'downloads' | null>(null)
 
   // Report the content area bounds to the main process
+  // Electron uses DIPs (same as CSS pixels), no DPR scaling needed
   const reportBounds = useCallback(() => {
     if (contentRef.current) {
       const rect = contentRef.current.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
       window.quietBrowse.tab.setBounds({
-        x: Math.round(rect.x * dpr),
-        y: Math.round(rect.y * dpr),
-        width: Math.round(rect.width * dpr),
-        height: Math.round(rect.height * dpr)
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
       })
     }
   }, [])
@@ -71,6 +73,10 @@ export default function App() {
       if (e.ctrlKey && e.key === 't') {
         e.preventDefault()
         createTab()
+      }
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        createTab(undefined, true)
       }
       if (e.ctrlKey && e.key === 'w') {
         e.preventDefault()
@@ -112,6 +118,18 @@ export default function App() {
         e.preventDefault()
         if (activeTabId !== null) setFindOpen(true)
       }
+      if (e.ctrlKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        setLibraryKind('bookmarks')
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault()
+        setLibraryKind('history')
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault()
+        setLibraryKind('downloads')
+      }
       // Ctrl+= or Ctrl++ — zoom in
       if (e.ctrlKey && (e.key === '=' || e.key === '+') && activeTabId !== null) {
         e.preventDefault()
@@ -147,6 +165,11 @@ export default function App() {
         canGoForward={activeTab?.canGoForward ?? false}
         onNavigate={handleNavigate}
         onOpenSettings={() => setSettingsOpen(true)}
+        onNewPrivateTab={() => createTab(undefined, true)}
+        onOpenLibrary={setLibraryKind}
+        onBookmark={() => {
+          if (activeTab?.url) window.quietBrowse.bookmarks.add(activeTab.url, activeTab.title)
+        }}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -175,6 +198,17 @@ export default function App() {
 
       {/* Settings panel overlay */}
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {libraryKind && (
+        <LibraryPanel
+          kind={libraryKind}
+          isOpen
+          onClose={() => setLibraryKind(null)}
+          onNavigate={(url) => {
+            handleNavigate(url)
+            setLibraryKind(null)
+          }}
+        />
+      )}
     </div>
   )
 }

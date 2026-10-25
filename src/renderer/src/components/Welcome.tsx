@@ -10,7 +10,7 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    window.quietBrowse.app.getVersion().then((v) => setVersion(v)).catch(() => {})
+    window.quietBrowse.app.getVersion().then((v: string) => setVersion(v)).catch(() => {})
     // Auto-focus the search input
     setTimeout(() => inputRef.current?.focus(), 300)
   }, [])

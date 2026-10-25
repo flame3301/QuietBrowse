@@ -11,29 +11,36 @@ interface TabBarProps {
 
 export default function TabBar({ tabs, activeTabId, onActivate, onClose, onNewTab }: TabBarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [hovering, setHovering] = useState(false)
+
+  // When collapsed, show expanded content on hover
+  const expanded = !collapsed || hovering
 
   return (
     <aside
+      onMouseEnter={() => collapsed && setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       className={`
-        flex flex-col shrink-0 bg-zinc-900/40 border-r border-white/[0.04]
-        transition-all duration-200 ease-out
-        ${collapsed ? 'w-12' : 'w-60'}
+        flex flex-col shrink-0 bg-zinc-900/80 backdrop-blur-md border-r border-white/[0.04]
+        transition-all duration-200 ease-out relative z-20
+        ${collapsed && !hovering ? 'w-12' : 'w-56'}
+        ${collapsed && hovering ? 'shadow-2xl shadow-black/50' : ''}
       `}
     >
       {/* Header */}
       <div className="flex items-center justify-between h-9 px-2 shrink-0">
-        {!collapsed && (
+        {expanded && (
           <span className="text-[11px] font-medium text-zinc-600 uppercase tracking-wider pl-1.5">
             Tabs
           </span>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => { setCollapsed(!collapsed); setHovering(false) }}
           className="w-7 h-7 flex items-center justify-center rounded-md text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.06] transition-colors ml-auto"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            {collapsed ? (
+            {collapsed && !hovering ? (
               <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             ) : (
               <path d="M9 3L5 7L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -49,7 +56,7 @@ export default function TabBar({ tabs, activeTabId, onActivate, onClose, onNewTa
             key={tab.id}
             tab={tab}
             isActive={tab.id === activeTabId}
-            collapsed={collapsed}
+            collapsed={!expanded}
             onActivate={onActivate}
             onClose={onClose}
           />
@@ -64,7 +71,7 @@ export default function TabBar({ tabs, activeTabId, onActivate, onClose, onNewTa
             flex items-center gap-2 w-full rounded-lg px-2.5 h-8
             text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06]
             transition-colors duration-100
-            ${collapsed ? 'justify-center px-0' : ''}
+            ${!expanded ? 'justify-center px-0' : ''}
           `}
           aria-label="New tab"
         >
@@ -72,7 +79,7 @@ export default function TabBar({ tabs, activeTabId, onActivate, onClose, onNewTa
             <line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          {!collapsed && <span className="text-xs">New Tab</span>}
+          {expanded && <span className="text-xs">New Tab</span>}
         </button>
       </div>
     </aside>
@@ -142,6 +149,10 @@ function TabItem({
           </svg>
         )}
       </div>
+
+      {tab.isPrivate && !collapsed && (
+        <span className="text-[10px] text-accent-400" title="Private tab">Private</span>
+      )}
 
       {/* Title and URL */}
       {!collapsed && (

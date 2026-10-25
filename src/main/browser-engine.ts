@@ -1,5 +1,6 @@
-import { WebContentsView, type BrowserWindow } from 'electron'
+import { WebContentsView, session, type BrowserWindow } from 'electron'
 import { storage } from './storage'
+import { AdBlocker } from './ad-blocker'
 
 /**
  * BrowserEngine — manages WebContentsView instances (tabs)
@@ -18,11 +19,23 @@ export interface TabInfo {
   canGoBack: boolean
   canGoForward: boolean
   favicon: string
+  isPrivate: boolean
+}
+
+export interface DownloadInfo {
+  id: string
+  filename: string
+  url: string
+  path: string
+  state: 'progressing' | 'completed' | 'cancelled'
+  receivedBytes: number
+  totalBytes: number
 }
 
 interface ManagedTab {
   view: WebContentsView
   id: number
+  isPrivate: boolean
 }
 
 export class BrowserEngine {
@@ -30,12 +43,20 @@ export class BrowserEngine {
   private tabs: Map<number, ManagedTab> = new Map()
   private activeTabId: number | null = null
   private nextId = 1
+  private adBlocker: AdBlocker
+  private downloads = new Map<string, DownloadInfo>()
 
   // Layout bounds for the web content area
   private contentBounds = { x: 0, y: 38, width: 800, height: 562 }
 
   constructor(window: BrowserWindow) {
     this.window = window
+    this.adBlocker = new AdBlocker()
+    this.adBlocker.setEnabled(storage.getSetting('adBlockEnabled'))
+    for (const site of storage.getSetting('adBlockDisabledSites')) {
+      this.adBlocker.setSiteEnabled(site, false)
+    }
+    this.adBlocker.register()
     this.updateBoundsOnResize()
   }
 
@@ -64,29 +85,33 @@ export class BrowserEngine {
     const tab = this.tabs.get(this.activeTabId)
     if (!tab) return
 
-    const [winWidth, winHeight] = this.window.getContentSize()
     tab.view.setBounds({
       x: this.contentBounds.x,
       y: this.contentBounds.y,
-      width: Math.max(1, winWidth - this.contentBounds.x),
-      height: Math.max(1, winHeight - this.contentBounds.y)
+      width: Math.max(1, this.contentBounds.width),
+      height: Math.max(1, this.contentBounds.height)
     })
   }
 
   /** Create a new tab and return its ID */
-  createTab(url?: string): number {
+  createTab(url?: string, isPrivate = false): number {
     const id = this.nextId++
+    const partition = isPrivate ? `quietbrowse-private-${id}` : undefined
     const view = new WebContentsView({
       webPreferences: {
         sandbox: true,
         contextIsolation: true,
         nodeIntegration: false,
         webviewTag: false,
-        spellcheck: true
+        spellcheck: true,
+        partition
       }
     })
 
-    const managed: ManagedTab = { view, id }
+    if (isPrivate && partition) {
+      this.adBlocker.register(session.fromPartition(partition))
+    }
+    const managed: ManagedTab = { view, id, isPrivate }
     this.tabs.set(id, managed)
 
     // Wire up events to notify the renderer
@@ -139,7 +164,7 @@ export class BrowserEngine {
         const title = wc.getTitle()
         // Skip internal pages and empty URLs
         if (url && !url.startsWith('devtools://') && !url.startsWith('chrome://')) {
-          storage.addHistory(url, title)
+          if (!tab.isPrivate) storage.addHistory(url, title)
         }
       } catch { /* ignore errors during shutdown */ }
     })
@@ -148,6 +173,34 @@ export class BrowserEngine {
     wc.setWindowOpenHandler(({ url }) => {
       this.navigate(tab.id, url)
       return { action: 'deny' }
+    })
+
+    wc.session.on('will-download', (_event, item) => {
+      const id = `${tab.id}-${Date.now()}`
+      const download: DownloadInfo = {
+        id,
+        filename: item.getFilename(),
+        url: item.getURL(),
+        path: item.getSavePath(),
+        state: 'progressing',
+        receivedBytes: 0,
+        totalBytes: item.getTotalBytes()
+      }
+      this.downloads.set(id, download)
+      const notify = (): void => {
+        if (!this.window.isDestroyed()) this.window.webContents.send('download:updated', download)
+      }
+      item.on('updated', () => {
+        download.receivedBytes = item.getReceivedBytes()
+        download.totalBytes = item.getTotalBytes()
+        notify()
+      })
+      item.once('done', (_event, state) => {
+        download.state = state === 'completed' ? 'completed' : 'cancelled'
+        download.path = item.getSavePath()
+        notify()
+      })
+      notify()
     })
   }
 
@@ -164,7 +217,8 @@ export class BrowserEngine {
       isLoading: wc.isLoading(),
       canGoBack: wc.navigationHistory.canGoBack(),
       canGoForward: wc.navigationHistory.canGoForward(),
-      favicon: ''
+      favicon: '',
+      isPrivate: tab.isPrivate
     }
   }
 
@@ -281,6 +335,29 @@ export class BrowserEngine {
     return this.tabs.size
   }
 
+  getDownloads(): DownloadInfo[] {
+    return [...this.downloads.values()].reverse()
+  }
+
+  setAdBlockEnabled(enabled: boolean): void {
+    this.adBlocker.setEnabled(enabled)
+  }
+
+  isAdBlockEnabledForSite(url: string): boolean {
+    return this.adBlocker.isEnabledForSite(url)
+  }
+
+  toggleAdBlockForSite(url: string): void {
+    const enabled = !this.adBlocker.isEnabledForSite(url)
+    this.adBlocker.setSiteEnabled(url, enabled)
+    try {
+      const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, '')
+      storage.setAdBlockSiteEnabled(hostname, enabled)
+    } catch {
+      return
+    }
+  }
+
   // ── Find in page ─────────────────────────────
 
   /** Start or continue a find-in-page search */
@@ -326,4 +403,3 @@ export class BrowserEngine {
     }
   }
 }
-

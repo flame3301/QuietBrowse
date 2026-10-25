@@ -1,4 +1,5 @@
 import Omnibox from './Omnibox'
+import { useEffect, useState } from 'react'
 
 interface NavigationBarProps {
   activeTabId: number | null
@@ -8,6 +9,9 @@ interface NavigationBarProps {
   canGoForward: boolean
   onNavigate: (input: string) => void
   onOpenSettings: () => void
+  onNewPrivateTab: () => void
+  onOpenLibrary: (kind: 'bookmarks' | 'history' | 'downloads') => void
+  onBookmark: () => void
 }
 
 export default function NavigationBar({
@@ -17,8 +21,21 @@ export default function NavigationBar({
   canGoBack,
   canGoForward,
   onNavigate,
-  onOpenSettings
+  onOpenSettings,
+  onNewPrivateTab,
+  onOpenLibrary,
+  onBookmark
 }: NavigationBarProps) {
+  const [adBlockEnabled, setAdBlockEnabled] = useState(false)
+
+  useEffect(() => {
+    if (!currentUrl) {
+      setAdBlockEnabled(false)
+      return
+    }
+    window.quietBrowse.privacy.isEnabledForSite(currentUrl).then(setAdBlockEnabled)
+  }, [currentUrl])
+
   const handleBack = () => {
     if (activeTabId !== null) window.quietBrowse.tab.back(activeTabId)
   }
@@ -82,7 +99,32 @@ export default function NavigationBar({
         onStop={handleStop}
       />
 
+      <NavButton
+        onClick={() => {
+          window.quietBrowse.privacy.toggleSite(currentUrl)
+          setAdBlockEnabled((enabled) => !enabled)
+        }}
+        disabled={!currentUrl}
+        label={adBlockEnabled ? 'Disable ad blocking for this site' : 'Enable ad blocking for this site'}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1.5l5 2v3.8c0 3.2-2.1 5.9-5 7.2-2.9-1.3-5-4-5-7.2V3.5l5-2z" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M5.5 8l1.5 1.5 3.5-3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </NavButton>
+
       {/* New tab button */}
+      <NavButton
+        onClick={onNewPrivateTab}
+        label="New private tab"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2.5 7.5h11M4 7.5V5.2a1.7 1.7 0 0 1 1.7-1.7h4.6A1.7 1.7 0 0 1 12 5.2v2.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <circle cx="5" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+          <circle cx="11" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+      </NavButton>
+
       <NavButton
         onClick={() => window.quietBrowse.tab.create()}
         label="New tab"
@@ -91,6 +133,19 @@ export default function NavigationBar({
           <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           <line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
+      </NavButton>
+
+      <NavButton onClick={() => onOpenLibrary('bookmarks')} label="Bookmarks">
+        <span className="text-[11px] font-medium">★</span>
+      </NavButton>
+      <NavButton onClick={onBookmark} disabled={!currentUrl} label="Add bookmark">
+        <span className="text-[11px] font-medium">☆</span>
+      </NavButton>
+      <NavButton onClick={() => onOpenLibrary('history')} label="History">
+        <span className="text-[11px] font-medium">◷</span>
+      </NavButton>
+      <NavButton onClick={() => onOpenLibrary('downloads')} label="Downloads">
+        <span className="text-[11px] font-medium">↓</span>
       </NavButton>
 
       {/* Settings button */}

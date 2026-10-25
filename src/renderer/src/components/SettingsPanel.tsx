@@ -7,6 +7,7 @@ interface AppSettings {
   sidebarCollapsed: boolean
   clearOnExit: boolean
   adBlockEnabled: boolean
+  adBlockDisabledSites: string[]
   doNotTrack: boolean
   defaultZoom: number
 }
@@ -154,6 +155,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <>
               {/* Privacy toggles */}
               <SettingGroup title="Privacy">
+                <ToggleRow
+                  label="Block ads and trackers"
+                  description="Stops common advertising and tracking requests"
+                  checked={settings.adBlockEnabled}
+                  onChange={(v) => updateSetting('adBlockEnabled', v)}
+                />
                 <ToggleRow
                   label="Send Do Not Track header"
                   description="Requests websites not to track your browsing"
