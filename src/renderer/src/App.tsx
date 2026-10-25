@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import TitleBar from './components/TitleBar'
 import NavigationBar from './components/NavigationBar'
 import TabBar from './components/TabBar'
+import FindBar from './components/FindBar'
 import Welcome from './components/Welcome'
 import SettingsPanel from './components/SettingsPanel'
 import { useTabs } from './hooks/useTabs'
@@ -20,6 +21,7 @@ export default function App() {
 
   const contentRef = useRef<HTMLDivElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [findOpen, setFindOpen] = useState(false)
 
   // Report the content area bounds to the main process
   const reportBounds = useCallback(() => {
@@ -105,6 +107,30 @@ export default function App() {
         e.preventDefault()
         setSettingsOpen((prev) => !prev)
       }
+      // Ctrl+F — find in page
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault()
+        if (activeTabId !== null) setFindOpen(true)
+      }
+      // Ctrl+= or Ctrl++ — zoom in
+      if (e.ctrlKey && (e.key === '=' || e.key === '+') && activeTabId !== null) {
+        e.preventDefault()
+        window.quietBrowse.zoom.get(activeTabId).then((z: number) => {
+          window.quietBrowse.zoom.set(activeTabId, Math.min(3, z + 0.1))
+        })
+      }
+      // Ctrl+- — zoom out
+      if (e.ctrlKey && e.key === '-' && activeTabId !== null) {
+        e.preventDefault()
+        window.quietBrowse.zoom.get(activeTabId).then((z: number) => {
+          window.quietBrowse.zoom.set(activeTabId, Math.max(0.3, z - 0.1))
+        })
+      }
+      // Ctrl+0 — reset zoom
+      if (e.ctrlKey && e.key === '0' && activeTabId !== null) {
+        e.preventDefault()
+        window.quietBrowse.zoom.set(activeTabId, 1.0)
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -139,6 +165,11 @@ export default function App() {
         <div ref={contentRef} className="flex-1 relative overflow-hidden">
           {!hasActivePage && <Welcome onNavigate={handleNavigate} />}
           {hasActivePage && <div className="absolute inset-0 bg-white" />}
+
+          {/* Find bar — floats over content */}
+          {findOpen && hasActivePage && (
+            <FindBar activeTabId={activeTabId} onClose={() => setFindOpen(false)} />
+          )}
         </div>
       </div>
 

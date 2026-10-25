@@ -39,6 +39,19 @@ const api = {
       ipcRenderer.send('tab:setBounds', bounds)
   },
 
+  // ── Find in page ───────────────────────────────
+  find: {
+    start: (tabId: number, text: string, forward?: boolean): void =>
+      ipcRenderer.send('find:start', tabId, text, forward),
+    stop: (tabId: number): void => ipcRenderer.send('find:stop', tabId)
+  },
+
+  // ── Zoom ───────────────────────────────────────
+  zoom: {
+    set: (tabId: number, factor: number): void => ipcRenderer.send('zoom:set', tabId, factor),
+    get: (tabId: number): Promise<number> => ipcRenderer.invoke('zoom:get', tabId)
+  },
+
   // ── History ────────────────────────────────────
   history: {
     getAll: (): Promise<unknown[]> => ipcRenderer.invoke('history:getAll'),

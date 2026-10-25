@@ -281,6 +281,42 @@ export class BrowserEngine {
     return this.tabs.size
   }
 
+  // ── Find in page ─────────────────────────────
+
+  /** Start or continue a find-in-page search */
+  findInPage(tabId: number, text: string, forward = true): void {
+    const tab = this.tabs.get(tabId)
+    if (!tab || !text) return
+
+    tab.view.webContents.findInPage(text, {
+      forward,
+      findNext: forward
+    })
+  }
+
+  /** Stop a find-in-page search */
+  stopFindInPage(tabId: number): void {
+    const tab = this.tabs.get(tabId)
+    if (!tab) return
+    tab.view.webContents.stopFindInPage('clearSelection')
+  }
+
+  // ── Zoom ─────────────────────────────────────
+
+  /** Set zoom factor for a tab (1.0 = 100%) */
+  setZoom(tabId: number, factor: number): void {
+    const tab = this.tabs.get(tabId)
+    if (!tab) return
+    tab.view.webContents.setZoomFactor(Math.max(0.25, Math.min(5, factor)))
+  }
+
+  /** Get the current zoom factor */
+  getZoom(tabId: number): number {
+    const tab = this.tabs.get(tabId)
+    if (!tab) return 1.0
+    return tab.view.webContents.getZoomFactor()
+  }
+
   /** Destroy all tabs — called during app shutdown */
   destroy(): void {
     // Collect IDs first to avoid mutating map during iteration

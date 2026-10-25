@@ -145,6 +145,24 @@ function setupIPC(): void {
     engine?.setContentBounds(bounds)
   })
 
+  // ── Find in page IPC ───────────────────────────
+  ipcMain.on('find:start', (_event, tabId: number, text: string, forward?: boolean) => {
+    engine?.findInPage(tabId, text, forward)
+  })
+
+  ipcMain.on('find:stop', (_event, tabId: number) => {
+    engine?.stopFindInPage(tabId)
+  })
+
+  // ── Zoom IPC ───────────────────────────────────
+  ipcMain.on('zoom:set', (_event, tabId: number, factor: number) => {
+    engine?.setZoom(tabId, factor)
+  })
+
+  ipcMain.handle('zoom:get', (_event, tabId: number): number => {
+    return engine?.getZoom(tabId) ?? 1.0
+  })
+
   // ── History IPC ──────────────────────────────────
   ipcMain.handle('history:getAll', (): HistoryEntry[] => {
     return storage.getHistory()
